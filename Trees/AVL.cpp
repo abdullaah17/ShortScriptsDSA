@@ -1,33 +1,40 @@
 #include <iostream>
 using namespace std;
 
+// ==================================================
+// AVL TREE NODE DEFINITION
+// ==================================================
 struct Node {
-    int data;
-    Node* left;
-    Node* right;
-    int height;
+    int data;          // Value stored in the node
+    Node* left;        // Pointer to left child
+    Node* right;       // Pointer to right child
+    int height;        // Height of the node
 
+    // Constructor
     Node(int val) {
         data = val;
         left = NULL;
         right = NULL;
-        height = 1;   // new node starts at height 1
+        height = 1;    // New node is always added as a leaf
     }
 };
 
-// --------------------
-// Get Height
-// --------------------
+// ==================================================
+// FUNCTION: Get height of a node
+// ==================================================
+// If node is NULL → height = 0
+// Otherwise → return stored height
 int height(Node* node) {
     if (node == NULL)
         return 0;
     return node->height;
 }
 
-// --------------------
-// Get Balance Factor
-// BF = height(left) - height(right)
-// --------------------
+// ==================================================
+// FUNCTION: Get Balance Factor
+// ==================================================
+// Balance Factor = height(left subtree) - height(right subtree)
+// Valid AVL range: -1, 0, +1
 int getBalance(Node* node) {
     if (node == NULL)
         return 0;
@@ -35,77 +42,120 @@ int getBalance(Node* node) {
 }
 
 // ==================================================
-// RIGHT ROTATION (LL CASE)
+// RIGHT ROTATION
+// Applied to FIX an LL CASE
+//
+// LL CASE (Insertion-path diagram):
+// Insertion occurs in the LEFT subtree of the LEFT child
+//
+//        z
+//       /
+//      y
+//     /
+//    x
+//
+// Rotation-pointer view (what the code handles):
+//   z → unbalanced node
+//   y → left child of z        (y = z->left)
+//   x → right subtree of y    (x = y->right)
+//
+// BEFORE rotation (pointer structure):
+//
+//            z
+//           /
+//          y
+//           \
+//            x
+//
+// AFTER rotation:
+//
+//            y
+//           / \
+//     y->left   z
+//              /
+//             x
+//
+// Pointer updates:
+//   y->right = z
+//   z->left  = x
 // ==================================================
-/*
-    BEFORE (LL Case):
-
-            z
-           /
-          y
-         /
-        x
-
-    AFTER Right Rotation:
-
-            y
-           / \
-          x   z
-*/
 Node* rightRotate(Node* z) {
-    Node* y = z->left;
-    Node* T2 = y->right;
+    Node* y = z->left;      // Left child of z
+    Node* x = y->right;    // Right subtree of y
 
-    // Rotation
+    //Rotating:
+
     y->right = z;
-    z->left = T2;
+    z->left = x;
 
-    // Update heights
     z->height = max(height(z->left), height(z->right)) + 1;
     y->height = max(height(y->left), height(y->right)) + 1;
 
-    return y;   // new root
+    return y;
 }
 
 // ==================================================
-// LEFT ROTATION (RR CASE)
+// LEFT ROTATION
+// Applied to FIX an RR CASE
+//
+// RR CASE (Insertion-path diagram):
+// Insertion occurs in the RIGHT subtree of the RIGHT child
+//
+//    z
+//     \
+//      y
+//       \
+//        x
+//
+// Rotation-pointer view (what the code handles):
+//   z → unbalanced node
+//   y → right child of z       (y = z->right)
+//   x → left subtree of y     (x = y->left)
+//
+// BEFORE rotation (pointer structure):
+//
+//        z
+//         \
+//          y
+//         /
+//        x
+//
+// AFTER rotation:
+//
+//            y
+//           / \
+//          z   y->right
+//           \
+//            x
+//
+// Pointer updates:
+//   y->left  = z
+//   z->right = x
 // ==================================================
-/*
-    BEFORE (RR Case):
-
-        z
-         \
-          y
-           \
-            x
-
-    AFTER Left Rotation:
-
-            y
-           / \
-          z   x
-*/
 Node* leftRotate(Node* z) {
-    Node* y = z->right;
-    Node* T2 = y->left;
+    Node* y = z->right;     // Right child of z
+    Node* x = y->left;     // Left subtree of y
 
-    // Rotation
     y->left = z;
-    z->right = T2;
+    z->right = x;
 
-    // Update heights
     z->height = max(height(z->left), height(z->right)) + 1;
     y->height = max(height(y->left), height(y->right)) + 1;
 
-    return y;   // new root
+    return y;
 }
 
+
 // ==================================================
-// AVL INSERTION (handles all 4 cases)
+// AVL INSERT FUNCTION
 // ==================================================
+// 1. Perform normal BST insertion
+// 2. Update height of current node
+// 3. Check balance factor
+// 4. Apply rotations if needed
 Node* insert(Node* node, int key) {
 
-    // Normal BST insertion
+    // ---------- BST INSERT ----------
     if (node == NULL)
         return new Node(key);
 
@@ -114,52 +164,34 @@ Node* insert(Node* node, int key) {
     else if (key > node->data)
         node->right = insert(node->right, key);
     else
-        return node;   // no duplicates
+        return node;   // Duplicate keys not allowed
 
-    // Update height
+    // ---------- UPDATE HEIGHT ----------
     node->height = 1 + max(height(node->left), height(node->right));
 
-    // Get balance factor
+    // ---------- CHECK BALANCE ----------
     int balance = getBalance(node);
 
     // ==================================================
     // LL CASE
-    // Insertion in LEFT subtree of LEFT child
-    //
-    //        z
-    //       /
-    //      y
-    //     /
-    //    x
+    // Left-heavy and insertion in left subtree of left child
     // ==================================================
     if (balance > 1 && key < node->left->data)
         return rightRotate(node);
 
     // ==================================================
     // RR CASE
-    // Insertion in RIGHT subtree of RIGHT child
-    //
-    //    z
-    //     \
-    //      y
-    //       \
-    //        x
+    // Right-heavy and insertion in right subtree of right child
     // ==================================================
     if (balance < -1 && key > node->right->data)
         return leftRotate(node);
 
     // ==================================================
     // LR CASE
-    // Insertion in RIGHT subtree of LEFT child
+    // Left-heavy and insertion in right subtree of left child
     //
-    //        z
-    //       /
-    //      y
-    //       \
-    //        x
-    //
-    // Step 1: Left Rotate y
-    // Step 2: Right Rotate z
+    // Step 1: Left rotate left child
+    // Step 2: Right rotate node
     // ==================================================
     if (balance > 1 && key > node->left->data) {
         node->left = leftRotate(node->left);
@@ -168,28 +200,25 @@ Node* insert(Node* node, int key) {
 
     // ==================================================
     // RL CASE
-    // Insertion in LEFT subtree of RIGHT child
+    // Right-heavy and insertion in left subtree of right child
     //
-    //    z
-    //     \
-    //      y
-    //     /
-    //    x
-    //
-    // Step 1: Right Rotate y
-    // Step 2: Left Rotate z
+    // Step 1: Right rotate right child
+    // Step 2: Left rotate node
     // ==================================================
     if (balance < -1 && key < node->right->data) {
         node->right = rightRotate(node->right);
         return leftRotate(node);
     }
 
+    // Node is balanced
     return node;
 }
 
-// --------------------
-// Inorder Traversal
-// --------------------
+// ==================================================
+// INORDER TRAVERSAL
+// ==================================================
+// Left → Root → Right
+// Always prints sorted order in AVL tree
 void inorder(Node* root) {
     if (root == NULL)
         return;
@@ -199,18 +228,13 @@ void inorder(Node* root) {
     inorder(root->right);
 }
 
-// --------------------
-// Main Function
-// --------------------
+// ==================================================
+// MAIN FUNCTION
+// ==================================================
 int main() {
     Node* root = NULL;
 
-    // Try these insertions to trigger rotations:
-    // LL Case: 30, 20, 10
-    // RR Case: 10, 20, 30
-    // LR Case: 30, 10, 20
-    // RL Case: 10, 30, 20
-
+    // Insertions chosen to trigger multiple rotations
     root = insert(root, 10);
     root = insert(root, 20);
     root = insert(root, 30);
@@ -223,6 +247,3 @@ int main() {
 
     return 0;
 }
-
-
-

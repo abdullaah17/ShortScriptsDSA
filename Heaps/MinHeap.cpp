@@ -19,18 +19,14 @@ void insertMinHeap(int heap[], int &size, int value) {
         i = parent(i); // Moves the pointer upward so heapify up can continue correctly.
     }
 }
-// Delete root (minimum element) from Min Heap
-int deleteMin(int heap[], int &size) {
-    int min = heap[0];    // store the root      
-    heap[0] = heap[size - 1];   // shift the last el from end to root
-    size--;                     // reduce size of heap
 
-    int i = 0;                  
+// Heapify Down function
+void heapifyDown(int heap[], int size, int i) {
 
-    while (true) {
+    while (i < size) {
         int l = 2*i + 1;
         int r = 2*i + 2;
-        int smallest = i;
+        int smallest = i; //i=parent
 
         if (l < size && heap[l] < heap[smallest])
             smallest = l;
@@ -39,19 +35,32 @@ int deleteMin(int heap[], int &size) {
             smallest = r;
 
         if (smallest == i)
-            break;
+            return;   // heap property satisfied
 
         swap(heap[i], heap[smallest]);
         i = smallest;
     }
+}
+
+
+// Delete root (minimum element) from Min Heap
+int deleteMin(int heap[], int &size) {
+    int min = heap[0];    // store the root      
+    heap[0] = heap[size - 1];   // shift the last el from end to root
+    size--;                     // reduce size of heap
+
+    // Heapify down:
+    heapifyDown(heap, size, 0);
 
     return min;
 }
+
 void printHeap(int heap[], int size) {
     for (int i = 0; i < size; i++)
         cout << heap[i] << " ";
     cout << endl;
 }
+
 int main() {
     int heap[100];   // heap array
     int size = 0;    // current heap size
@@ -63,7 +72,6 @@ int main() {
     insertMinHeap(heap, size, 40); //[3]
     insertMinHeap(heap, size, 12); //[4]
     insertMinHeap(heap, size, 25); //[5]
-
 
     // Print final heap
     cout << "Min Heap (array representation): ";

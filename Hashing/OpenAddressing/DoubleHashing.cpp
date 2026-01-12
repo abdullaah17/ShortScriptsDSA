@@ -1,11 +1,11 @@
 #include <iostream>
 using namespace std;
 
-#define SIZE 10
-#define EMPTY -1
-#define DELETED -2
-
 class HashTable {
+    static const int SIZE = 10;      // table size
+    static const int EMPTY = -1;     // empty slot
+    static const int DELETED = -2;   // deleted slot
+
     int table[SIZE];
     int count;
 
@@ -21,7 +21,7 @@ public:
         return key % SIZE;
     }
 
-    // Secondary hash function (must be non-zero)
+    // Secondary hash function (non-zero, coprime with SIZE)
     int hash2(int key) {
         return 7 - (key % 7);
     }
